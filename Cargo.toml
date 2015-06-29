@@ -1,0 +1,20 @@
+[package]
+name = "joinkit"
+version = "0.1.0"
+authors = ["Milan Opath <milan.opath@gmail.com>"]
+
+[lib]
+name = "joinkit"
+path = "src/lib.rs"
+
+[[bin]]
+name = "hjoin"
+path = "src/bin/hjoin.rs"
+
+[[bin]]
+name = "mjoin"
+path = "src/bin/mjoin.rs"
+
+[dependencies]
+clap = "1.5"
+itertools = "0.4"
