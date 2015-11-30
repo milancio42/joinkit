@@ -2,6 +2,12 @@
 name = "joinkit"
 version = "0.1.0"
 authors = ["Milan Opath <milan.opath@gmail.com>"]
+description = "Iterator adaptors for efficient SQL-like joins"
+repository = "https://github.com/milancio42/joinkit"
+documentation = "http://milancio42.github.io/joinkit"
+readme = "https://github.com/milancio42/joinkit/blob/master/README.md"
+keywords = ["join", "SQL", "iterator"]
+license = "MIT"
 
 [lib]
 name = "joinkit"
