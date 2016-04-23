@@ -4,7 +4,6 @@ use itertools::Itertools;
 use clap::{ClapError, ClapErrorType,};
 use std::io::{BufRead, Write, BufWriter,};
 use std::ptr;
-use std::mem;
 use std::borrow::Cow;
 use super::Joinkit;
 
@@ -30,7 +29,7 @@ pub fn rec_sep_as_byte(rec_str: &str) -> Result<u8, ClapError> {
 /// position.
 ///
 /// The resulting vector is sorted on the field indices. The error is returned if the input string
-/// contains duplicate fieled indices.
+/// contains duplicate field indices.
 ///
 /// # Example
 /// ```
@@ -110,25 +109,24 @@ pub unsafe fn extract_key(record: &str,
                    key_idx: &[(usize, isize)],) -> Vec<String> { 
     let keys_len = key_idx.len();
     let mut keys: Vec<String> = Vec::with_capacity(keys_len);
-    let p_keys = keys.as_mut_ptr();
     let mut actual_len = 0usize;
     {
+        let ptr = keys.as_mut_ptr();
         let key_idx_it = key_idx.iter();
         let key_fields_it = record.split(field_sep)
             .enumerate()
             // join on enumerated value and key_idx
             .merge_join_inner_by(key_idx_it, |l, r| Ord::cmp(&l.0, &r.0));
-        mem::forget(keys);
         for ((_, k), &(_, i)) in key_fields_it {
-            ptr::write(p_keys.offset(i), k.to_owned());
+            ptr::write(ptr.offset(i), k.to_owned());
             actual_len += 1;
+            keys.set_len(actual_len);
         }
         if actual_len != keys_len {
             panic!("Error during the key extraction: the key index exceeds the number of fields
                    in the record!");
         }
     }
-    let keys = Vec::from_raw_parts(p_keys, keys_len, keys_len);
     keys
 }
 
