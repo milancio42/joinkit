@@ -1,6 +1,6 @@
 [package]
 name = "joinkit"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Milan Opath <milan.opath@gmail.com>"]
 description = "Iterator adaptors for efficient SQL-like joins"
 repository = "https://github.com/milancio42/joinkit"
@@ -22,5 +22,5 @@ name = "mjoin"
 path = "src/bin/mjoin.rs"
 
 [dependencies]
-clap = "1.5"
+clap = "2.*"
 itertools = "0.4"

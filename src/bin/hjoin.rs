@@ -22,13 +22,29 @@ fn main() {
         .author("Milan Opath <milan.opath@gmail.com>")
         .about("Join records of two files using the Hash Join strategy.")
         .arg(Arg::with_name("FIELDS1")
-            .help("Join on these comma-separated FIELDS of FILE1. The index starts with 1 and must not contain duplicates.")
+            .help("Join on these comma-separated FIELDS of FILE1. \
+                  The index starts with 1 and must not contain duplicates. \
+                  It can optionally contain a flag to convert the given key to a number, e.g. \
+                  '1-i,2,3-u'. \
+                  Since strings are compared lexicographically, they are not suitable for numbers, \
+                  e.g. `2` would be \
+                  greater than `12`. \
+                  The recognized flags are: -u: convert to unsigned int 64 \
+                                            -i: convert to signed int 64.")
             .short("1")
-            .takes_value(true))
-        .arg(Arg::with_name("FIELDS2")
-            .help("Join on these comma-separated FIELDS of FILE2. The index starts with 1 and must not contain duplicates.")
+            .default_value("1"))
+            .arg(Arg::with_name("FIELDS2")
+            .help("Join on these comma-separated FIELDS of FILE2. \
+                  The index starts with 1 and must not contain duplicates. \
+                  It can optionally contain a flag to convert the given key to a number, e.g. \
+                  '1-i,2,3-u'. \
+                  Since strings are compared lexicographically, they are not suitable for numbers, \
+                  e.g. `2` would be \
+                  greater than `12`. \
+                  The recognized flags are: -u: convert to unsigned int 64 \
+                                            -i: convert to signed int 64.")
             .short("2")
-            .takes_value(true))
+            .default_value("1"))
         .arg(Arg::with_name("in-rec-sep")
             .help("Input record separator - must be encodable as a single byte in utf8.")
             .short("R")
@@ -112,11 +128,21 @@ fn main() {
     let out_field_sep: &str = matches.value_of("out-field-sep").unwrap_or(in_field_sep);
     let out_field_sep_u8: &[u8] = out_field_sep.as_bytes();
 
-    let key_fields_idx_left: Vec<(usize, isize)> = match util::fields_to_idx(matches.value_of("FIELDS1").unwrap_or("1")) {
+    let key_fields_idx_left: Vec<(usize, 
+                                  isize, 
+                                  util::DataType)> 
+                             = match util::fields_to_idx(matches.values_of("FIELDS1")
+                                                                .unwrap()
+                                                                .collect::<Vec<_>>()) {
         Ok(v) => v,
         Err(e) => e.exit(),
     };
-    let key_fields_idx_right: Vec<(usize, isize)> = match util::fields_to_idx(matches.value_of("FIELDS2").unwrap_or("2")) {
+    let key_fields_idx_right: Vec<(usize, 
+                                   isize, 
+                                   util::DataType)> 
+                             = match util::fields_to_idx(matches.values_of("FIELDS2")
+                                                                .unwrap()
+                                                                .collect::<Vec<_>>()) {
         Ok(v) => v,
         Err(e) => e.exit(),
     };

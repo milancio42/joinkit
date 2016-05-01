@@ -32,11 +32,17 @@ Prepare test data:
 data_path=/tmp/join
 if ! [[ -d $data_path ]]; then mkdir -p $data_path; fi
 cd $data_path
-gawk 'BEGIN{n=10;for(i=0;i<n;i++){print i ",1,L"}}' > left-10
-gawk 'BEGIN{n=10;for(i=(n/2);i<(n+n/2);i++){print "1," i ",R"}}' > right-10
+gawk 'BEGIN{n=20;for(i=0;i<n;i++){print i ",L"}}' > left-num-20
+gawk 'BEGIN{n=20;for(i=(n/2);i<(n+n/2);i++){print i ",R"}}' > right-num-20
 
-gawk 'BEGIN{n=1000000;for(i=0;i<n;i++){print i ",1,L"}}' > left-1M
-gawk 'BEGIN{n=1000000;for(i=(n/2);i<(n+n/2);i++){print "1," i ",R"}}' > right-1M
+gawk 'BEGIN{n=20;for(i=0;i<n;i++){print i ",L"}}' | sort -t , -k 1,1 > left-char-20
+gawk 'BEGIN{n=20;for(i=(n/2);i<(n+n/2);i++){print i ",R"}}' | sort -t , -k 1,1 > right-char-20
+
+gawk 'BEGIN{n=1000000;for(i=0;i<n;i++){print i ",L"}}' > left-num-1M
+gawk 'BEGIN{n=1000000;for(i=(n/2);i<(n+n/2);i++){print i ",R"}}' > right-num-1M
+
+gawk 'BEGIN{n=1000000;for(i=0;i<n;i++){print i ",L"}}' | sort -t , -k 1,1 > left-char-1M
+gawk 'BEGIN{n=1000000;for(i=(n/2);i<(n+n/2);i++){print i ",R"}}' | sort -t , -k 1,1 > right-char-1M
 ```
 
 clone repository:
@@ -55,23 +61,26 @@ The join key in the left file is composed by the second and the first column, wh
 
 **Note**, in case of `hjoin`, the right input data is loaded into `HashMap`.
 ```bash
-./hjoin -1 2,1 -2 1,2 $data_path/left-10 $data_path/right-10
+./hjoin -1 1 -2 1 $data_path/left-char-20 $data_path/right-char-20
+
+# in order to join on numeric data, use '-u' flag to convert a string to 'u64' (or '-i' to 'i64')
+./hjoin -1 1-u -2 1-u $data_path/left-num-20 $data_path/right-num-20
 ```
 
 This is equivalent to:
 
 ```bash
-./hjoin -1 2,1 -2 1,2 -m inner -R $'\n' -F ',' $data_path/left-10 $data_path/right-10
+./hjoin -1 1 -2 1 -m inner -R $'\n' -F ',' $data_path/left-char-20 $data_path/right-char-20
 
-./hjoin -1 2,1 -2 1,2 --mode inner --in-rec-sep $'\n' --in-field_sep ',' --out-rec-sep $'\n' --out-field-sep ',' $data_path/left-10 $data_path/right-10
+./hjoin -1 1 -2 1 --mode inner --in-rec-sep $'\n' --in-field_sep ',' --out-rec-sep $'\n' --out-field-sep ',' $data_path/left-char-20 $data_path/right-char-20
 
-./hjoin -1 2,1 -2 1,2 --mode inner --in-rec-sep-left $'\n' --in-rec-sep-right $'\n' --in-field_sep-left ',' --in-field_sep-right ',' --out-rec-sep $'\n' --out-field-sep ',' $data_path/left-10 $data_path/right-10
+./hjoin -1 1 -2 1 --mode inner --in-rec-sep-left $'\n' --in-rec-sep-right $'\n' --in-field_sep-left ',' --in-field_sep-right ',' --out-rec-sep $'\n' --out-field-sep ',' $data_path/left-char-20 $data_path/right-char-20
 ```
 
 Since both input files are sorted on the join key, we can get the same results using `mjoin`:
 
 ```bash
-./mjoin -1 2,1 -2 1,2 $data_path/left-10 $data_path/right-10
+./mjoin -1 1 -2 1 $data_path/left-char-20 $data_path/right-char-20
 ```
 
 #### **Left Exclusive Join**
@@ -80,9 +89,9 @@ The output contains only the rows, which have the key present in the left
 input file exclusively.
 
 ```bash
-./hjoin -1 2,1 -2 1,2 -m left-excl $data_path/left-10 $data_path/right-10
+./hjoin -1 1 -2 1 -m left-excl $data_path/left-char-20 $data_path/right-char-20
 
-./mjoin -1 2,1 -2 1,2 -m left-excl $data_path/left-10 $data_path/right-10
+./mjoin -1 1 -2 1 -m left-excl $data_path/left-char-20 $data_path/right-char-20
 ```
 
 #### **Left Outer Join**
@@ -90,9 +99,9 @@ input file exclusively.
 The output contains the rows, which are union of `inner join` and `left exclusive join`.
 
 ```bash
-./hjoin -1 2,1 -2 1,2 -m left-outer $data_path/left-10 $data_path/right-10
+./hjoin -1 1 -2 1 -m left-outer $data_path/left-char-20 $data_path/right-char-20
 
-./mjoin -1 2,1 -2 1,2 -m left-outer $data_path/left-10 $data_path/right-10
+./mjoin -1 1 -2 1 -m left-outer $data_path/left-char-20 $data_path/right-char-20
 ```
 
 #### **Right Exclusive Join**
@@ -102,9 +111,9 @@ input file exclusively.
 Note, in case of `hjoin`, the output is ordered based on `HashMap`'s internal
 ordering, which is very likely different from that of the input.
 ```bash
-./hjoin -1 2,1 -2 1,2 -m right-excl $data_path/left-10 $data_path/right-10
+./hjoin -1 1 -2 1 -m right-excl $data_path/left-char-20 $data_path/right-char-20
 
-./mjoin -1 2,1 -2 1,2 -m right-excl $data_path/left-10 $data_path/right-10
+./mjoin -1 1 -2 1 -m right-excl $data_path/left-char-20 $data_path/right-char-20
 ```
 
 #### **Right Outer Join**
@@ -114,9 +123,9 @@ Note, in case of `hjoin`, the output is ordered based on `HashMap`'s internal
 ordering, which is very likely different from that of the input.
 
 ```bash
-./hjoin -1 2,1 -2 1,2 -m right-outer $data_path/left-10 $data_path/right-10
+./hjoin -1 1 -2 1 -m right-outer $data_path/left-char-20 $data_path/right-char-20
 
-./mjoin -1 2,1 -2 1,2 -m right-outer $data_path/left-10 $data_path/right-10
+./mjoin -1 1 -2 1 -m right-outer $data_path/left-char-20 $data_path/right-char-20
 ```
 
 #### **Full Outer Join**
@@ -127,9 +136,9 @@ Note, in case of `hjoin`, the output is ordered based on `HashMap`'s internal
 ordering, which is very likely different from that of the input.
 
 ```bash
-./hjoin -1 2,1 -2 1,2 -m full-outer $data_path/left-10 $data_path/right-10
+./hjoin -1 1 -2 1 -m full-outer $data_path/left-char-20 $data_path/right-char-20
 
-./mjoin -1 2,1 -2 1,2 -m full-outer $data_path/left-10 $data_path/right-10
+./mjoin -1 1 -2 1 -m full-outer $data_path/left-char-20 $data_path/right-char-20
 ```
 
 ## **Performance**
